@@ -1,0 +1,22 @@
+# ── Etapa 1 (CelebA) ────────────────────────────────────────────────────────
+# torch
+# torchvision
+# pandas
+# pillow
+# scikit-learn
+# scikit-image
+# matplotlib
+# seaborn
+# umap-learn
+
+# ── Etapa 2 (140k Real and Fake Faces) ──────────────────────────────────────
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch
+torchvision
+pandas
+pillow
+scikit-learn
+matplotlib
+seaborn
+kaggle
+tqdm

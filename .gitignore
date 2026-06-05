@@ -1,7 +1,9 @@
 __pycache__/
+.ipynb_checkpoints/
 .pytest_cache/
 .venv/
 venv/
+venv_projeto5/
 .env
 *.pyc
 *.pyo
@@ -10,6 +12,7 @@ build/
 dist/
 *.egg-info/
 
+data_root.env
 data/raw/
 data/interim/
 data/processed/
