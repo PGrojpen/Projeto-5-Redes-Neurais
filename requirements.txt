@@ -20,3 +20,4 @@ matplotlib
 seaborn
 kaggle
 tqdm
+nbstripout  # após instalar, rode: nbstripout --install
