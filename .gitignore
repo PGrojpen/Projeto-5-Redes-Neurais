@@ -13,6 +13,7 @@ dist/
 *.egg-info/
 
 data_root.env
+external/
 data/raw/
 data/interim/
 data/processed/
