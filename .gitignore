@@ -1,18 +1,32 @@
+# Python
 __pycache__/
-.ipynb_checkpoints/
-.pytest_cache/
-.venv/
-venv/
-venv_projeto5/
-.env
 *.pyc
 *.pyo
 *.pyd
 build/
 dist/
 *.egg-info/
+.pytest_cache/
 
+# Ambientes virtuais
+.venv/
+venv/
+venv_projeto5/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editor / SO
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Config local (caminho da máquina)
 data_root.env
+
+# Dados e saídas (grandes / regeneráveis)
 external/
 data/raw/
 data/interim/
