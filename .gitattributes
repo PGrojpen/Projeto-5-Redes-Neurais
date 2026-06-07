@@ -1,0 +1,11 @@
+# Marca binarios como binary para evitar conversao de fim de linha (core.autocrlf=true),
+# que corromperia esses arquivos no checkout.
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.pth  binary
+*.pt   binary
+*.npy  binary
+*.npz  binary
