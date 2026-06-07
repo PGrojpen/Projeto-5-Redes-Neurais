@@ -87,6 +87,24 @@ class PathListDataset(Dataset):
         return self.transform(Image.open(path).convert("RGB")), label
 
 
+def artifact_split(files, which="test", frac=0.5, seed=777):
+    """Particiona deterministicamente uma lista de arquivos em duas metades DISJUNTAS.
+
+    Evita vazamento metodológico: o ArtiFact é usado tanto para *selecionar*
+    augmentation/HP (notebooks 01d/01e/01f) quanto para o *número final*
+    cross-generator (03/04). Se forem os mesmos dados, o AUC reportado fica
+    otimista. Com este split:
+      - which='dev'  -> metade de SELEÇÃO (sweep/grid/hp_search, 01x);
+      - which='test' -> metade de TESTE FINAL (03/04), nunca vista na seleção.
+
+    A partição é fixa (depende só de `seed`), então é reprodutível e disjunta.
+    """
+    order = list(files)
+    random.Random(seed).shuffle(order)
+    cut = int(len(order) * frac)
+    return order[:cut] if which == "dev" else order[cut:]
+
+
 def clean_transform(image_size):
     """Resize + ToTensor + Normalize (sem augmentation). Para eval e ArtiFact."""
     return transforms.Compose([
