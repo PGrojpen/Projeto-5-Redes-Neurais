@@ -9,7 +9,7 @@ import io
 import random
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageOps, ImageEnhance
 from torch.utils.data import Dataset
 from torchvision import transforms
 
@@ -38,6 +38,62 @@ def apply_preprocess(img, method, value):
         size = int(value)
         size = size + 1 if size % 2 == 0 else size  # MedianFilter exige tamanho ímpar
         return img.filter(ImageFilter.MedianFilter(size=max(3, size)))
+    # ---- familia espectral cirurgica ----
+    if method == "whiten":
+        # remocao de picos espectrais: puxa a magnitude de cada frequencia para a MEDIA
+        # RADIAL (azimutal) dela. Remove a grade/picos periodicos do gerador, mas preserva
+        # o decaimento radial de energia (DC, brilho e a estrutura 1/f natural ficam intactos).
+        # value (0..1): 0 = identidade, 1 = espectro radialmente simetrico (sem picos).
+        s = float(value)
+        arr = np.array(img.convert("RGB"), dtype=np.float32)
+        h, w = arr.shape[:2]
+        yy, xx = np.indices((h, w))
+        r = np.hypot(xx - w // 2, yy - h // 2).astype(int)
+        rmax = int(r.max()) + 1
+        nr = np.bincount(r.ravel(), minlength=rmax)
+        out = np.empty_like(arr)
+        for c in range(3):
+            F = np.fft.fftshift(np.fft.fft2(arr[..., c]))
+            mag = np.abs(F) + 1e-8
+            radial = np.bincount(r.ravel(), mag.ravel(), minlength=rmax) / np.maximum(nr, 1)
+            new_mag = mag * (radial[r] / mag) ** s   # s=1 -> magnitude = media radial (sem picos)
+            rec = np.fft.ifft2(np.fft.ifftshift(new_mag * np.exp(1j * np.angle(F))))
+            out[..., c] = np.real(rec)
+        return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
+    if method == "bars":
+        # ataque BARS (Wesselkamp et al. 2022): zera uma borda de espessura `value`
+        # do espectro centralizado = brick-wall low-pass nas frequencias mais altas,
+        # onde mora a digital de upsampling do gerador.
+        width = int(value)
+        arr = np.array(img.convert("RGB"), dtype=np.float32)
+        if width > 0:
+            h, w = arr.shape[:2]
+            mask = np.ones((h, w), dtype=np.float32)
+            mask[:width, :] = 0.0; mask[-width:, :] = 0.0
+            mask[:, :width] = 0.0; mask[:, -width:] = 0.0
+            for c in range(3):
+                F = np.fft.fftshift(np.fft.fft2(arr[..., c]))
+                arr[..., c] = np.real(np.fft.ifft2(np.fft.ifftshift(F * mask)))
+        return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
+    # ---- familia cor / canais ----
+    if method == "grayscale":
+        g = float(value)  # blend 0..1 (1 = cinza total)
+        gray = img.convert("L").convert("RGB")
+        return gray if g >= 1.0 else Image.blend(img.convert("RGB"), gray, g)
+    if method == "chanshuffle":
+        perms = [(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)]
+        p = perms[int(value) % len(perms)]
+        return Image.fromarray(np.array(img.convert("RGB"))[..., list(p)])
+    if method == "posterize":
+        return ImageOps.posterize(img.convert("RGB"), int(value))  # value = bits (1..8)
+    if method == "histeq":
+        return ImageOps.equalize(img.convert("RGB"))               # value ignorado
+    if method == "gamma":
+        g = float(value)
+        arr = np.array(img.convert("RGB"), dtype=np.float32) / 255.0
+        return Image.fromarray((np.clip(arr ** g, 0, 1) * 255).astype(np.uint8))
+    if method == "saturation":
+        return ImageEnhance.Color(img.convert("RGB")).enhance(float(value))  # 1=identidade
     return img
 
 
