@@ -20,6 +20,7 @@ matplotlib
 seaborn
 kaggle
 tqdm
-ipywidgets  # barra de progresso widget (tqdm.notebook)
+scikit-learn
+ipywidgets
 opencv-python
 nbstripout  # após instalar, rode: nbstripout --install
